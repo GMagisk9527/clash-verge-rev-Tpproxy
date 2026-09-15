@@ -22,20 +22,22 @@ pub fn use_tproxy(mut config: Mapping, enabled: bool, dns_port: u16) -> Mapping 
     }
 
     let dns_key = Value::from("dns");
-    let dns_val = config
+    let mut dns_val = config
         .get(&dns_key)
         .and_then(Value::as_mapping)
         .cloned()
         .unwrap_or_default();
+    // The redirect rules always need a listener; fake-ip only applies to the
+    // default mode, so an explicitly configured redir-host stays functional
+    // (matching rules then see real IPs instead of domains).
+    revise!(dns_val, "enable", true);
+    revise!(dns_val, "listen", format!("0.0.0.0:{dns_port}"));
     let current_mode = dns_val
         .get(Value::from("enhanced-mode"))
         .and_then(Value::as_str)
         .unwrap_or("fake-ip");
 
     if current_mode == "fake-ip" || !dns_val.contains_key(Value::from("enhanced-mode")) {
-        revise!(dns_val, "enable", true);
-        revise!(dns_val, "listen", format!("0.0.0.0:{dns_port}"));
-
         if !dns_val.contains_key(Value::from("enhanced-mode")) {
             revise!(dns_val, "enhanced-mode", "fake-ip");
         }
