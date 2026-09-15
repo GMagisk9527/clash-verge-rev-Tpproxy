@@ -4,12 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
 import { useVerge } from '@/hooks/use-verge'
+import getSystem from '@/utils/get-system'
 
 import { GuardState } from './mods/guard-state'
 import { SettingList, SettingItem } from './mods/setting-comp'
 import { SysproxyViewer } from './mods/sysproxy-viewer'
 import { TunViewer } from './mods/tun-viewer'
-import getSystem from '@/utils/get-system'
 
 const OS = getSystem()
 
