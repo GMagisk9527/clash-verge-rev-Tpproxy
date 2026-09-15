@@ -348,11 +348,7 @@ pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Re
             .verge_tproxy_port
             .unwrap_or(constants::network::ports::DEFAULT_TPROXY);
         if let Err(restore_error) = super::tproxy::rules_enable(port).await {
-            logging!(
-                error,
-                Type::Core,
-                "failed to restore TPROXY rules after patch rollback: {restore_error:#}"
-            );
+            logging!(error, Type::Core, "failed to restore TPROXY rules after patch rollback: {restore_error:#}");
         }
     }
     terminated?;

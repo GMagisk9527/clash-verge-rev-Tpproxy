@@ -127,7 +127,7 @@ async fn run_elevated(mut command: StdCommand) -> Result<Output> {
             let stdout = drain_pipe(child.stdout.take());
             let stderr = drain_pipe(child.stderr.take());
             return Ok(Output {
-                status,
+                status: status,
                 stdout: stdout.into_bytes(),
                 stderr: stderr.into_bytes(),
             });
