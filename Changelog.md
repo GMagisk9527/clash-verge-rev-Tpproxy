@@ -30,7 +30,7 @@
 **🐧 Linux**
 
 - 新增 Linux 系统主题跟随，自动切换深浅色外观
-- 新增 Linux TPROXY 透明代理，将局域网设备的 TCP/UDP 流量交由内核代理
+- 新增 Linux TPROXY 透明代理，接管本机与局域网设备的 TCP/UDP 流量（代理本机流量需服务模式）
 
 </details>
 

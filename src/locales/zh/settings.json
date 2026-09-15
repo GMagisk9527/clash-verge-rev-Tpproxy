@@ -34,7 +34,7 @@
       "tooltips": {
         "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
         "tunMode": "TUN（虚拟网卡）模式接管系统所有流量，启用时无须打开系统代理",
-        "tproxyMode": "TPROXY 透明代理将本机及局域网设备的 TCP/UDP 流量交由 Mihomo 处理（需要 root 提权，仅 Linux）",
+        "tproxyMode": "TPROXY 透明代理将本机及局域网设备的 TCP/UDP 流量交由 Mihomo 处理（仅 Linux，需要 root 提权；代理本机流量需服务模式，以便内核以独立用户运行）",
         "tunUnavailable": "TUN 模式需要安装服务模式或管理员模式"
       },
       "actions": {

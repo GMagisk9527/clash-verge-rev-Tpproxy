@@ -34,7 +34,7 @@
       "tooltips": {
         "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
         "tunMode": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
-        "tproxyMode": "TPROXY transparently diverts this machine's and LAN devices' TCP/UDP traffic to Mihomo (root elevation required, Linux only)",
+        "tproxyMode": "TPROXY transparently diverts this machine's and LAN devices' TCP/UDP traffic to Mihomo (Linux only, root elevation required; proxying this machine itself requires Service Mode so the Core runs as a separate user)",
         "tunUnavailable": "TUN requires Service Mode or Admin Mode"
       },
       "actions": {

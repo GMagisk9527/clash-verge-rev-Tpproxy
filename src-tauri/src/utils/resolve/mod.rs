@@ -65,7 +65,7 @@ pub fn resolve_setup_async() {
 
         let core_init = AsyncHandler::spawn(|| async {
             init_core_manager().await;
-            // After the Core is up, so the TPROXY rules can exclude its own traffic by pid.
+            // After the Core is up, so the TPROXY rules can exclude its own traffic by uid.
             #[cfg(target_os = "linux")]
             feat::reconcile_startup_tproxy_rules().await;
         });

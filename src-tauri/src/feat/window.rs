@@ -79,6 +79,13 @@ where
 }
 
 async fn restore_dns_after_core_stop() -> bool {
+    // The TPROXY rules are kernel state that outlives this process, so they must go
+    // with the app; otherwise every connection keeps being diverted into a Core that
+    // is no longer running and the whole machine loses its network.
+    #[cfg(target_os = "linux")]
+    if let Err(error) = crate::feat::tproxy_rules_disabled_cleanup().await {
+        logging!(warn, Type::Window, "TPROXY rules removal failed at exit: {error:#}");
+    }
     #[cfg(target_os = "macos")]
     match timeout(
         Duration::from_millis(1000),

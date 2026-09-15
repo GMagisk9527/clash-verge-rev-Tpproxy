@@ -162,6 +162,31 @@ impl CoreManager {
     /// not set those alongside.
     pub fn core_started(&self, mode: RunningMode) {
         self.run_state.core_started(mode);
+        // The TPROXY rules encode the Core's runtime uid, which changes when the
+        // running mode does (service Core as root, sidecar Core as this user).
+        // Re-apply them on every start so the exclusion never goes stale; a stale
+        // exclusion would send the Core's own upstream traffic back into itself.
+        #[cfg(target_os = "linux")]
+        Self::spawn_tproxy_refresh();
+    }
+
+    /// Re-apply the TPROXY rules off the hot path after a Core start.
+    ///
+    /// Fire and forget: a failure only means the exclusion may be stale, which the
+    /// next start fixes; the rules themselves stay valid for the LAN path. The
+    /// atomic guard prevents overlapping refreshes when several starts race.
+    #[cfg(target_os = "linux")]
+    fn spawn_tproxy_refresh() {
+        static REFRESH_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
+        if REFRESH_IN_FLIGHT.swap(true, Ordering::AcqRel) {
+            return;
+        }
+        crate::process::AsyncHandler::spawn(|| async move {
+            if let Err(error) = crate::feat::tproxy::reconcile_startup_tproxy_rules().await {
+                logging!(warn, Type::Core, "failed to refresh TPROXY rules after Core start: {error:#}");
+            }
+            REFRESH_IN_FLIGHT.store(false, Ordering::Release);
+        });
     }
 
     /// The Core is no longer running, for any reason.
