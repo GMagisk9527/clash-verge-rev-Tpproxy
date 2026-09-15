@@ -174,8 +174,8 @@ fn stale_rules_present() -> bool {
     // iproute2 prints the mark in hex (`fwmark 0xff`); accept the decimal form
     // too so a formatting change cannot hide a stale rule set.
     let matches = |line: &str| {
-        (line.contains(&format!("fwmark {mark:#x} lookup {table}"))
-            || line.contains(&format!("fwmark {mark} lookup {table}")))
+        line.contains(&format!("fwmark {mark:#x} lookup {table}"))
+            || line.contains(&format!("fwmark {mark} lookup {table}"))
     };
     StdCommand::new("ip")
         .arg("rule")

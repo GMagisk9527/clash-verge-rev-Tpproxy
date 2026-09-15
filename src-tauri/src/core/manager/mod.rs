@@ -182,9 +182,8 @@ impl CoreManager {
             return;
         }
         crate::process::AsyncHandler::spawn(|| async move {
-            if let Err(error) = crate::feat::tproxy::reconcile_startup_tproxy_rules().await {
-                logging!(warn, Type::Core, "failed to refresh TPROXY rules after Core start: {error:#}");
-            }
+            // The function logs its own failures; nothing to propagate here.
+            crate::feat::reconcile_startup_tproxy_rules().await;
             REFRESH_IN_FLIGHT.store(false, Ordering::Release);
         });
     }
