@@ -94,7 +94,7 @@ async fn run_script(action: &str, tproxy_port: u16) -> Result<()> {
 
     let output = if running_as_root() {
         let mut command = StdCommand::new("bash");
-        command.arg(&script).args(&args).stdin(Stdio::null());
+        command.arg(&script).args(args).stdin(Stdio::null());
         run_elevated(&mut command).await?
     } else {
         run_with_elevation(&script, &args).await?
@@ -128,7 +128,7 @@ async fn run_elevated(command: &mut StdCommand) -> Result<Output> {
             let stdout = drain_pipe(child.stdout.take());
             let stderr = drain_pipe(child.stderr.take());
             return Ok(Output {
-                status: status,
+                status,
                 stdout: stdout.into_bytes(),
                 stderr: stderr.into_bytes(),
             });
