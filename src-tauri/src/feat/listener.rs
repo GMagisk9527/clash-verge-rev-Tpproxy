@@ -123,6 +123,14 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     }
 
     transaction.commit();
+    #[cfg(target_os = "linux")]
+    if let Err(error) =
+        super::tproxy::reconcile_tproxy_rules(settings.tproxy.enabled, settings.tproxy.port).await
+    {
+        // The port change is already persisted; the rules failing only leaves the toggle
+        // harmless until the user flips it again, so surface it without rolling back.
+        logging!(error, Type::Config, "failed to reconcile TPROXY rules after port save: {error:#}");
+    }
     Handle::refresh_clash();
     Handle::refresh_verge();
     logging!(info, Type::Config, "Proxy port configuration applied and persisted");

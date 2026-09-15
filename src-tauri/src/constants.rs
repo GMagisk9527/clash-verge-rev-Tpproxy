@@ -50,6 +50,22 @@ pub mod files {
     pub const WINDOW_STATE: &str = "window_state.json";
 }
 
+/// Linux-only TPROXY transparent proxy.
+#[cfg(target_os = "linux")]
+pub mod tproxy {
+    /// fwmark TPROXY sets on diverted packets and the policy-rule matches.
+    pub const MARK: u32 = 0xff;
+
+    /// Routing table holding the `local 0.0.0.0/0` route that delivers marked packets to the TPROXY socket.
+    pub const TABLE: u32 = 100;
+
+    /// `ip rule` priority, kept apart from the rules other tools install.
+    pub const PREF: u32 = 7890;
+
+    /// Mihomo `dns.listen` port that diverted LAN DNS (port 53) is redirected to.
+    pub const DNS_PORT: u16 = 1053;
+}
+
 pub mod tun {
     pub const DEFAULT_STACK: &str = "gvisor";
 

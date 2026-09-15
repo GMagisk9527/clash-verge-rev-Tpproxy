@@ -3,6 +3,8 @@ pub mod field;
 mod merge;
 mod script;
 pub mod seq;
+#[cfg(target_os = "linux")]
+mod tproxy;
 mod tun;
 
 use self::{
@@ -11,6 +13,8 @@ use self::{
     merge::use_merge,
     script::use_script,
     seq::{SeqMap, use_seq},
+    #[cfg(target_os = "linux")]
+    tproxy::use_tproxy,
     tun::use_tun,
 };
 use crate::utils::dirs;
@@ -41,6 +45,8 @@ struct ConfigValues {
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
     tproxy_enabled: bool,
+    #[cfg(target_os = "linux")]
+    tproxy_port: u16,
 }
 
 #[derive(Debug)]
@@ -137,6 +143,11 @@ async fn get_config_values() -> ConfigValues {
     #[cfg(target_os = "linux")]
     let tproxy_enabled = verge_arc.verge_tproxy_enabled.unwrap_or(false);
 
+    #[cfg(target_os = "linux")]
+    let tproxy_port = verge_arc
+        .verge_tproxy_port
+        .unwrap_or(constants::network::ports::DEFAULT_TPROXY);
+
     drop(verge_arc);
     drop(verge);
 
@@ -153,6 +164,8 @@ async fn get_config_values() -> ConfigValues {
         redir_enabled,
         #[cfg(target_os = "linux")]
         tproxy_enabled,
+        #[cfg(target_os = "linux")]
+        tproxy_port,
     }
 }
 
@@ -720,6 +733,8 @@ pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, 
         redir_enabled,
         #[cfg(target_os = "linux")]
         tproxy_enabled,
+        #[cfg(target_os = "linux")]
+        tproxy_port,
     } = cfg_vals;
 
     // collect profile items
@@ -757,6 +772,8 @@ pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, 
     let config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
     let config = use_tun(config, enable_tun);
     let config = apply_dns_settings(config, enable_dns_settings).await;
+    #[cfg(target_os = "linux")]
+    let config = use_tproxy(config, tproxy_enabled, constants::tproxy::DNS_PORT);
 
     // 手动覆盖前锁定 app 权威字段,覆盖后由同一个值恢复。
     let authoritative = AuthoritativeFields::capture(&config, enable_dns_settings);

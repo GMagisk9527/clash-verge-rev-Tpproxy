@@ -5,6 +5,8 @@ mod icon;
 mod listener;
 mod profile;
 mod proxy;
+#[cfg(target_os = "linux")]
+mod tproxy;
 mod tun;
 mod window;
 
@@ -16,5 +18,7 @@ pub use icon::*;
 pub use listener::*;
 pub use profile::*;
 pub use proxy::*;
+#[cfg(target_os = "linux")]
+pub use tproxy::*;
 pub use tun::*;
 pub use window::*;

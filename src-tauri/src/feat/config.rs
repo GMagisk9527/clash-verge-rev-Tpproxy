@@ -1,5 +1,6 @@
 use crate::{
     config::{Config, IVerge},
+    constants,
     core::{CoreManager, autostart, handle, hotkey, logger::Logger, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
@@ -306,7 +307,60 @@ pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Re
 
     let update_flags = determine_update_flags(patch);
     logging!(debug, Type::Setup, "Determined update flags: {:?}", update_flags);
-    process_terminated_flags(update_flags, patch).await?;
+
+    // TPROXY rules are root-owned kernel state: when the toggle flips off they must go before
+    // the Core restart closes the port, and when it flips on they follow the restart so traffic
+    // is never diverted to a listener that is not serving yet.
+    #[cfg(target_os = "linux")]
+    let tproxy_reconcile = {
+        if patch.verge_tproxy_enabled.is_some() || patch.verge_tproxy_port.is_some() {
+            let candidate = verge.latest_arc();
+            let enabled = candidate.verge_tproxy_enabled.unwrap_or(false);
+            let port = candidate
+                .verge_tproxy_port
+                .unwrap_or(constants::network::ports::DEFAULT_TPROXY);
+            Some(if enabled {
+                super::tproxy::RulesReconcile::Enable(port)
+            } else {
+                super::tproxy::RulesReconcile::Disable
+            })
+        } else {
+            None
+        }
+    };
+    #[cfg(target_os = "linux")]
+    let tproxy_rules_removed = matches!(tproxy_reconcile, Some(super::tproxy::RulesReconcile::Disable));
+    #[cfg(target_os = "linux")]
+    if tproxy_rules_removed {
+        super::tproxy::rules_disable().await?;
+    }
+
+    // A failed patch rolls back to what the user already had; it never invents a value for them.
+    let terminated = process_terminated_flags(update_flags, patch).await;
+
+    // The rollback keeps the toggle on, so put the rules back when the restart that was
+    // supposed to close the listener failed, instead of leaving traffic undiverted.
+    #[cfg(target_os = "linux")]
+    if tproxy_rules_removed && terminated.is_err() {
+        let candidate = verge.latest_arc();
+        let port = candidate
+            .verge_tproxy_port
+            .unwrap_or(constants::network::ports::DEFAULT_TPROXY);
+        if let Err(restore_error) = super::tproxy::rules_enable(port).await {
+            logging!(
+                error,
+                Type::Core,
+                "failed to restore TPROXY rules after patch rollback: {restore_error:#}"
+            );
+        }
+    }
+    terminated?;
+
+    #[cfg(target_os = "linux")]
+    if let Some(super::tproxy::RulesReconcile::Enable(port)) = tproxy_reconcile {
+        super::tproxy::rules_enable(port).await?;
+    }
+
     transaction.commit();
 
     logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);

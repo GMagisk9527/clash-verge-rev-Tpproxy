@@ -20,6 +20,9 @@ import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useSystemState } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
+import getSystem from '@/utils/get-system'
+
+const OS = getSystem()
 
 interface ProxySwitchProps {
   label?: string
@@ -168,6 +171,12 @@ const ProxyControlSwitches = ({
     }
   })
 
+  // TPROXY rules are applied/removed on the backend while patching the verge toggle.
+  const handleTproxyToggle = async (value: boolean) => {
+    mutateVerge({ ...verge, verge_tproxy_enabled: value }, false)
+    await patchVerge({ verge_tproxy_enabled: value })
+  }
+
   const onUninstallService = useLockFn(async () => {
     try {
       await uninstallServiceAndStartSidecar()
@@ -179,6 +188,8 @@ const ProxyControlSwitches = ({
   const isSystemProxyMode =
     label === t('settings.sections.system.toggles.systemProxy') || !label
   const isTunMode = label === t('settings.sections.system.toggles.tunMode')
+  const isTproxyMode =
+    label === t('settings.sections.system.toggles.tproxyMode')
 
   return (
     <Box sx={{ width: '100%', pr: noRightPadding ? 1 : 2 }}>
@@ -239,6 +250,17 @@ const ProxyControlSwitches = ({
               )}
             </>
           }
+        />
+      )}
+
+      {isTproxyMode && OS === 'linux' && (
+        <SwitchRow
+          label={t('settings.sections.proxyControl.fields.tproxyMode')}
+          active={verge?.verge_tproxy_enabled ?? false}
+          infoTitle={t('settings.sections.proxyControl.tooltips.tproxyMode')}
+          onToggle={handleTproxyToggle}
+          onError={onError}
+          highlight={verge?.verge_tproxy_enabled ?? false}
         />
       )}
 

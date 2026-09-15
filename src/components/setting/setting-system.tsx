@@ -9,6 +9,9 @@ import { GuardState } from './mods/guard-state'
 import { SettingList, SettingItem } from './mods/setting-comp'
 import { SysproxyViewer } from './mods/sysproxy-viewer'
 import { TunViewer } from './mods/tun-viewer'
+import getSystem from '@/utils/get-system'
+
+const OS = getSystem()
 
 interface Props {
   onError?: (err: Error) => void
@@ -41,6 +44,13 @@ const SettingSystem = ({ onError }: Props) => {
         label={t('settings.sections.system.toggles.tunMode')}
         onError={onError}
       />
+
+      {OS === 'linux' && (
+        <ProxyControlSwitches
+          label={t('settings.sections.system.toggles.tproxyMode')}
+          onError={onError}
+        />
+      )}
 
       <ProxyControlSwitches
         label={t('settings.sections.system.toggles.systemProxy')}

@@ -1301,10 +1301,12 @@ export interface TranslationResources {
           }
           fields: {
             systemProxy: string
+            tproxyMode: string
             tunMode: string
           }
           tooltips: {
             systemProxy: string
+            tproxyMode: string
             tunMode: string
             tunUnavailable: string
           }
@@ -1323,6 +1325,7 @@ export interface TranslationResources {
           title: string
           toggles: {
             systemProxy: string
+            tproxyMode: string
             tunMode: string
           }
           tooltips: {
