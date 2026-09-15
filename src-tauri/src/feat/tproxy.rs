@@ -12,7 +12,7 @@
 //! the toggle stays on.
 
 use std::{
-    io::Read as _,
+    io::Read,
     path::{Path, PathBuf},
     process::{Command as StdCommand, Output, Stdio},
     time::{Duration, Instant},
@@ -93,8 +93,9 @@ async fn run_script(action: &str, tproxy_port: u16) -> Result<()> {
     ];
 
     let output = if running_as_root() {
-        let command = StdCommand::new("bash").arg(&script).args(&args).stdin(Stdio::null());
-        run_elevated(command).await?
+        let mut command = StdCommand::new("bash");
+        command.arg(&script).args(&args).stdin(Stdio::null());
+        run_elevated(&mut command).await?
     } else {
         run_with_elevation(&script, &args).await?
     };
@@ -115,7 +116,7 @@ async fn run_script(action: &str, tproxy_port: u16) -> Result<()> {
 /// `std::process` on purpose: the workspace Tokio build does not guarantee the
 /// `process` feature, and the elevation prompt can outlive the child, so the
 /// timeout is enforced by polling `try_wait` instead of blocking on the child.
-async fn run_elevated(mut command: StdCommand) -> Result<Output> {
+async fn run_elevated(command: &mut StdCommand) -> Result<Output> {
     let mut child = command
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -144,7 +145,7 @@ async fn run_elevated(mut command: StdCommand) -> Result<Output> {
     }
 }
 
-fn drain_pipe(pipe: Option<std::process::ChildStdout>) -> String {
+fn drain_pipe<R: Read>(pipe: Option<R>) -> String {
     let mut buffer = String::new();
     if let Some(mut pipe) = pipe {
         let _ = pipe.read_to_string(&mut buffer);
@@ -155,13 +156,9 @@ fn drain_pipe(pipe: Option<std::process::ChildStdout>) -> String {
 /// Run the script through pkexec (falling back to sudo), mirroring the service installer.
 async fn run_with_elevation(script: &Path, args: &[&str]) -> Result<Output> {
     let elevator = linux_elevator();
-    let command = StdCommand::new(&elevator)
-        .arg("--disable-internal-agent")
-        .arg("bash")
-        .arg(script)
-        .args(args)
-        .stdin(Stdio::null());
-    let output = run_elevated(command).await?;
+    let mut command = StdCommand::new(&elevator);
+    command.arg("--disable-internal-agent").arg("bash").arg(script).args(args).stdin(Stdio::null());
+    let output = run_elevated(&mut command).await?;
 
     // pkexec fails fast when no graphical agent answers; sudo is the fallback there.
     if !output.status.success() && elevator.contains("pkexec") {
@@ -171,12 +168,9 @@ async fn run_with_elevation(script: &Path, args: &[&str]) -> Result<Output> {
             "pkexec failed (exit {:?}), falling back to sudo",
             output.status.code()
         );
-        let command = StdCommand::new("sudo")
-            .arg("bash")
-            .arg(script)
-            .args(args)
-            .stdin(Stdio::null());
-        return run_elevated(command).await;
+        let mut command = StdCommand::new("sudo");
+        command.arg("bash").arg(script).args(args).stdin(Stdio::null());
+        return run_elevated(&mut command).await;
     }
     Ok(output)
 }

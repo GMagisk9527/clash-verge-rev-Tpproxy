@@ -45,8 +45,6 @@ struct ConfigValues {
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
     tproxy_enabled: bool,
-    #[cfg(target_os = "linux")]
-    tproxy_port: u16,
 }
 
 #[derive(Debug)]
@@ -143,11 +141,6 @@ async fn get_config_values() -> ConfigValues {
     #[cfg(target_os = "linux")]
     let tproxy_enabled = verge_arc.verge_tproxy_enabled.unwrap_or(false);
 
-    #[cfg(target_os = "linux")]
-    let tproxy_port = verge_arc
-        .verge_tproxy_port
-        .unwrap_or(constants::network::ports::DEFAULT_TPROXY);
-
     drop(verge_arc);
     drop(verge);
 
@@ -164,8 +157,6 @@ async fn get_config_values() -> ConfigValues {
         redir_enabled,
         #[cfg(target_os = "linux")]
         tproxy_enabled,
-        #[cfg(target_os = "linux")]
-        tproxy_port,
     }
 }
 
@@ -733,8 +724,6 @@ pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, 
         redir_enabled,
         #[cfg(target_os = "linux")]
         tproxy_enabled,
-        #[cfg(target_os = "linux")]
-        tproxy_port,
     } = cfg_vals;
 
     // collect profile items
