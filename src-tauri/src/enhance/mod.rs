@@ -13,10 +13,10 @@ use self::{
     merge::use_merge,
     script::use_script,
     seq::{SeqMap, use_seq},
-    #[cfg(target_os = "linux")]
-    tproxy::use_tproxy,
     tun::use_tun,
 };
+#[cfg(target_os = "linux")]
+use self::tproxy::use_tproxy;
 use crate::utils::dirs;
 use crate::{
     config::{Config, IProfiles, IVerge, PrfItem},

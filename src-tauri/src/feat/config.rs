@@ -1,9 +1,10 @@
 use crate::{
     config::{Config, IVerge},
-    constants,
     core::{CoreManager, autostart, handle, hotkey, logger::Logger, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
+#[cfg(target_os = "linux")]
+use crate::constants;
 use anyhow::Result;
 use bitflags::bitflags;
 use clash_verge_draft::{DraftTransaction, SharedDraft};
