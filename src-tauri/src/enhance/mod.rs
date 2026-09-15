@@ -7,6 +7,8 @@ pub mod seq;
 mod tproxy;
 mod tun;
 
+#[cfg(target_os = "linux")]
+use self::tproxy::use_tproxy;
 use self::{
     chain::{AsyncChainItemFrom as _, ChainItem, ChainType},
     field::{use_keys, use_lowercase, use_sort},
@@ -15,8 +17,6 @@ use self::{
     seq::{SeqMap, use_seq},
     tun::use_tun,
 };
-#[cfg(target_os = "linux")]
-use self::tproxy::use_tproxy;
 use crate::utils::dirs;
 use crate::{
     config::{Config, IProfiles, IVerge, PrfItem},

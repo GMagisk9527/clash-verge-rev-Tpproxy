@@ -77,7 +77,11 @@ pub async fn reconcile_startup_tproxy_rules() {
         .verge_tproxy_port
         .unwrap_or(constants::network::ports::DEFAULT_TPROXY);
     if let Err(error) = rules_enable(port).await {
-        logging!(error, Type::Setup, "failed to restore TPROXY rules at startup: {error:#}");
+        logging!(
+            error,
+            Type::Setup,
+            "failed to restore TPROXY rules at startup: {error:#}"
+        );
     }
 }
 
@@ -107,7 +111,11 @@ async fn run_script(action: &str, tproxy_port: u16) -> Result<()> {
         bail!("TPROXY rules {action} failed (exit {code:?}): {stderr}");
     }
     let stderr = stderr.trim();
-    logging!(info, Type::Core, "TPROXY rules {action}ed for port {tproxy_port}: {stderr}");
+    logging!(
+        info,
+        Type::Core,
+        "TPROXY rules {action}ed for port {tproxy_port}: {stderr}"
+    );
     Ok(())
 }
 
@@ -157,7 +165,12 @@ fn drain_pipe<R: Read>(pipe: Option<R>) -> String {
 async fn run_with_elevation(script: &Path, args: &[&str]) -> Result<Output> {
     let elevator = linux_elevator();
     let mut command = StdCommand::new(&elevator);
-    command.arg("--disable-internal-agent").arg("bash").arg(script).args(args).stdin(Stdio::null());
+    command
+        .arg("--disable-internal-agent")
+        .arg("bash")
+        .arg(script)
+        .args(args)
+        .stdin(Stdio::null());
     let output = run_elevated(&mut command).await?;
 
     // pkexec fails fast when no graphical agent answers; sudo is the fallback there.
